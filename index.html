@@ -6,73 +6,86 @@
 <title>QUÉT QR & MÃ VẠCH DATE</title>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
-*{box-sizing:border-box} body{margin:0;font-family:Arial,sans-serif;background:#f4f6f8;color:#111}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f4f6f8;color:#111}
 .wrap{max-width:680px;margin:auto;padding:16px}
 h1{font-size:22px;text-align:center;margin:8px 0 4px}
 .sub{text-align:center;color:#666;font-size:14px;margin-bottom:12px}
 .card{background:#fff;border-radius:16px;padding:14px;box-shadow:0 2px 10px #0001;margin-bottom:12px}
 #reader{width:100%;overflow:hidden;border-radius:12px}
 .result{font-size:24px;font-weight:700;text-align:center;word-break:break-all;padding:12px}
-button{width:100%;padding:13px;margin-top:8px;border:0;border-radius:10px;font-size:16px;font-weight:700}
-.primary{background:#111;color:#fff}.secondary{background:#e9ecef}
-.note{font-size:14px;line-height:1.45;color:#555}
+button{width:100%;padding:14px;margin-top:8px;border:0;border-radius:10px;font-size:16px;font-weight:700}
+.primary{background:#111;color:#fff}.photo{background:#1769aa;color:#fff}.secondary{background:#e9ecef}
+.status{text-align:center;font-size:14px;color:#666;margin:8px 0;line-height:1.4}
+.note{font-size:14px;line-height:1.5;color:#555}
 label{display:block;font-weight:700;margin:10px 0 4px}
 input[type=range]{width:100%}
 #zoomBox{display:none}
-.status{text-align:center;font-size:14px;color:#666;margin:8px 0}
+#photoInput{display:none}
+.success{color:#087f23;font-weight:700}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>QUÉT QR & MÃ VẠCH DATE</h1>
-  <div class="sub">QR Code • EAN-13 • EAN-8 • UPC-A • UPC-E</div>
+<h1>QUÉT QR & MÃ VẠCH DATE</h1>
+<div class="sub">QR Code • EAN-13 • EAN-8 • UPC-A • UPC-E</div>
 
-  <div class="card">
-    <div id="reader"></div>
-    <div id="status" class="status">Đang khởi động camera...</div>
-  </div>
+<div class="card">
+  <div id="reader"></div>
+  <div id="status" class="status">Đang khởi động camera...</div>
+  <button class="photo" onclick="document.getElementById('photoInput').click()">
+    📷 CHỤP HÌNH / CHỌN ẢNH MÃ 13
+  </button>
+  <input id="photoInput" type="file" accept="image/*" capture="environment">
+</div>
 
-  <div class="card">
-    <div class="note"><b>Để quét mã vạch 13 số nhỏ:</b> đưa camera gần mã vạch, giữ thẳng, đủ sáng. Nếu điện thoại hỗ trợ zoom camera, tăng zoom để các vạch chiếm phần lớn khung.</div>
-    <div id="zoomBox">
-      <label>Zoom camera: <span id="zoomValue">1×</span></label>
-      <input id="zoom" type="range" min="1" max="1" step="0.1" value="1">
-    </div>
+<div class="card">
+  <div class="note">
+    <b>Khi mã vạch quá nhỏ:</b> dùng nút <b>CHỤP HÌNH / CHỌN ẢNH MÃ 13</b>.
+    Chụp thật gần, lấy nét rõ, để toàn bộ mã vạch nằm trong ảnh và tránh lóa sáng.
   </div>
+  <div id="zoomBox">
+    <label>Zoom camera: <span id="zoomValue">1×</span></label>
+    <input id="zoom" type="range" min="1" max="1" step="0.1" value="1">
+  </div>
+</div>
 
-  <div class="card">
-    <div class="note">Kết quả:</div>
-    <div id="result" class="result">Chưa có mã</div>
-    <button class="primary" onclick="copyCode()">SAO CHÉP MÃ</button>
-    <button class="secondary" onclick="openForm()">MỞ GOOGLE FORM</button>
-    <button class="secondary" onclick="restart()">QUÉT LẠI</button>
-  </div>
+<div class="card">
+  <div class="note">Kết quả:</div>
+  <div id="result" class="result">Chưa có mã</div>
+  <button class="primary" onclick="copyCode()">SAO CHÉP MÃ</button>
+  <button class="secondary" onclick="openForm()">MỞ GOOGLE FORM</button>
+  <button class="secondary" onclick="restart()">QUÉT LẠI</button>
+</div>
 </div>
 
 <script>
 const FORM_URL = "https://docs.google.com/forms/d/1jB3CHYlO5TvvV8XVucdNFwwhJv-4cRMXjKFqZCzuyY8/edit";
 let scanner = null;
 let lastCode = "";
-let zoomSupported = false;
 
-function setStatus(t){document.getElementById("status").textContent=t;}
-
-function onSuccess(decodedText, decodedResult){
-  const code = String(decodedText || "").replace(/\D/g,"");
-  if(!code) return;
-  lastCode = code;
-  document.getElementById("result").textContent = code;
-  setStatus("Đã nhận mã: " + code);
-  try{ scanner.pause(true); }catch(e){}
+function setStatus(t, ok=false){
+  const el=document.getElementById("status");
+  el.textContent=t;
+  el.className="status"+(ok?" success":"");
 }
+function showCode(decodedText, source){
+  const code=String(decodedText||"").replace(/\D/g,"");
+  if(!code) return;
+  lastCode=code;
+  document.getElementById("result").textContent=code;
+  setStatus("Đã nhận mã "+(source==="photo"?"từ hình ảnh":"từ camera")+": "+code,true);
+  try{scanner.pause(true);}catch(e){}
+}
+function onSuccess(decodedText, decodedResult){ showCode(decodedText,"camera"); }
 
 async function start(){
-  scanner = new Html5Qrcode("reader");
-  const config = {
-    fps: 15,
-    qrbox: (w,h) => ({width: Math.floor(w*0.92), height: Math.floor(Math.min(h*0.38, 220))}),
-    aspectRatio: 1.7777778,
-    formatsToSupport: [
+  scanner=new Html5Qrcode("reader");
+  const config={
+    fps:15,
+    qrbox:(w,h)=>({width:Math.floor(w*0.92),height:Math.floor(Math.min(h*0.38,220))}),
+    aspectRatio:1.7777778,
+    formatsToSupport:[
       Html5QrcodeSupportedFormats.QR_CODE,
       Html5QrcodeSupportedFormats.EAN_13,
       Html5QrcodeSupportedFormats.EAN_8,
@@ -82,58 +95,61 @@ async function start(){
   };
   try{
     await scanner.start(
-      {facingMode:"environment", width:{ideal:1920}, height:{ideal:1080}},
-      config, onSuccess,
-      ()=>{}
+      {facingMode:"environment",width:{ideal:1920},height:{ideal:1080}},
+      config,onSuccess,()=>{}
     );
     setStatus("Camera sẵn sàng – đưa mã vạch vào giữa khung");
     setupZoom();
   }catch(e){
-    setStatus("Không mở được camera. Hãy cho phép Camera rồi tải lại trang.");
-    console.error(e);
+    setStatus("Không mở được camera. Bạn vẫn có thể dùng nút CHỤP HÌNH / CHỌN ẢNH MÃ 13.");
   }
 }
 
 async function setupZoom(){
   try{
-    const caps = scanner.getRunningTrackCameraCapabilities();
-    const z = caps && caps.zoom;
-    if(z && typeof z.min === "number" && typeof z.max === "number" && z.max > z.min){
-      zoomSupported = true;
-      const box = document.getElementById("zoomBox");
-      const slider = document.getElementById("zoom");
-      slider.min = z.min; slider.max = z.max;
-      slider.step = z.step || 0.1;
-      slider.value = Math.max(z.min, Math.min(z.max, z.min));
-      document.getElementById("zoomValue").textContent = Number(slider.value).toFixed(1).replace(".0","") + "×";
-      box.style.display = "block";
-      slider.oninput = async function(){
-        document.getElementById("zoomValue").textContent = Number(this.value).toFixed(1).replace(".0","") + "×";
-        try{
-          await scanner.applyVideoConstraints({advanced:[{zoom:Number(this.value)}]});
-        }catch(e){}
+    const caps=scanner.getRunningTrackCameraCapabilities();
+    const z=caps&&caps.zoom;
+    if(z&&typeof z.min==="number"&&typeof z.max==="number"&&z.max>z.min){
+      document.getElementById("zoomBox").style.display="block";
+      const slider=document.getElementById("zoom");
+      slider.min=z.min; slider.max=z.max; slider.step=z.step||0.1; slider.value=z.min;
+      slider.oninput=async function(){
+        document.getElementById("zoomValue").textContent=
+          Number(this.value).toFixed(1).replace(".0","")+"×";
+        try{await scanner.applyVideoConstraints({advanced:[{zoom:Number(this.value)}]});}catch(e){}
       };
     }
   }catch(e){}
 }
 
+/* PHƯƠNG ÁN CHỤP ẢNH / CHỌN ẢNH */
+document.getElementById("photoInput").addEventListener("change",async function(e){
+  const file=e.target.files&&e.target.files[0];
+  if(!file) return;
+  setStatus("Đang đọc mã vạch từ hình ảnh...");
+  try{
+    if(scanner){try{scanner.pause(true);}catch(err){}}
+    const result=await scanner.scanFile(file,true);
+    showCode(result,"photo");
+  }catch(err){
+    setStatus("Chưa đọc được mã từ ảnh. Hãy chụp gần hơn, đủ sáng và để toàn bộ mã vạch rõ nét.");
+    alert("Chưa đọc được mã 13 từ ảnh.\n\nHãy chụp lại thật gần mã vạch, giữ thẳng và tránh lóa sáng.");
+  }
+  this.value="";
+});
+
 async function restart(){
   lastCode="";
   document.getElementById("result").textContent="Chưa có mã";
-  try{
-    scanner.resume();
-    setStatus("Đưa mã vạch vào giữa khung");
-  }catch(e){
-    location.reload();
-  }
+  try{scanner.resume();setStatus("Đưa mã vạch vào giữa khung");}
+  catch(e){location.reload();}
 }
 async function copyCode(){
-  if(!lastCode) return alert("Chưa có mã để sao chép.");
-  await navigator.clipboard.writeText(lastCode);
-  alert("Đã sao chép mã: " + lastCode);
+  if(!lastCode){alert("Chưa có mã để sao chép.");return;}
+  try{await navigator.clipboard.writeText(lastCode);alert("Đã sao chép mã: "+lastCode);}
+  catch(e){alert("Mã: "+lastCode);}
 }
-function openForm(){ window.open(FORM_URL,"_blank"); }
-
+function openForm(){window.open(FORM_URL,"_blank");}
 start();
 </script>
 </body>
