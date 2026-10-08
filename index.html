@@ -2,85 +2,92 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#c62828">
-<title>QR DATE - Quét mã sản phẩm</title>
+<title>QR DATE - Quét QR & Mã vạch</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f5f5f5;color:#222}
-.wrap{max-width:560px;margin:auto;padding:16px}h1{font-size:24px;text-align:center;margin:8px 0 4px}
-.sub{text-align:center;color:#666;margin-bottom:14px}.card{background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 12px #0001;margin-bottom:14px}
-#reader{width:100%;overflow:hidden;border-radius:12px;background:#111;min-height:280px}
-button{width:100%;border:0;border-radius:12px;padding:15px;font-size:17px;font-weight:700;margin-top:10px;cursor:pointer}
-.primary{background:#c62828;color:#fff}.secondary{background:#eee;color:#222}.green{background:#188038;color:#fff}
-#result{font-size:25px;font-weight:700;text-align:center;letter-spacing:2px;word-break:break-all;padding:12px 4px}
-.status{text-align:center;color:#666;font-size:14px;margin-top:8px;line-height:1.4}.note{font-size:13px;color:#666;line-height:1.5}
+body{margin:0;background:#f5f5f5;font-family:Arial;color:#222}.wrap{max-width:560px;margin:auto;padding:16px}
+.card{background:white;border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 2px 12px #0001}
+h1{text-align:center;font-size:23px;margin:8px}.sub{text-align:center;color:#666}
+#reader{width:100%;min-height:280px;background:#111;border-radius:12px;overflow:hidden;margin-top:12px}
+#result{text-align:center;font-size:25px;font-weight:bold;word-break:break-all;padding:14px}
+.status{text-align:center;color:#666;line-height:1.5}
+button{width:100%;padding:15px;border:0;border-radius:12px;margin-top:10px;font-size:17px;font-weight:bold}
+.red{background:#c62828;color:#fff}.gray{background:#eee}.green{background:#188038;color:#fff}
+.note{font-size:13px;color:#666;line-height:1.5}
 </style>
 </head>
 <body>
 <div class="wrap">
-<h1>📷 QUÉT MÃ DATE TPCN</h1>
-<div class="sub">iPhone • Android • Máy tính có camera</div>
-<div class="card"><div id="reader"></div><div id="status" class="status">Đang chuẩn bị camera…</div></div>
+<h1>📷 QUÉT QR & MÃ VẠCH DATE</h1>
+<div class="sub">QR Code • EAN-13 • EAN-8 • UPC-A • UPC-E</div>
+
 <div class="card">
-<div style="text-align:center;font-weight:700">MÃ ĐÃ QUÉT</div>
-<div id="result">Chưa có mã</div>
-<button id="copyBtn" class="secondary" disabled>📋 SAO CHÉP MÃ</button>
-<button id="formBtn" class="primary" disabled>📝 MỞ GOOGLE FORM</button>
-<button id="againBtn" class="green">🔄 QUÉT MÃ KHÁC</button>
+<div id="reader"></div>
+<div id="status" class="status">Đang mở camera…</div>
 </div>
-<div class="card note"><b>Nếu camera không mở:</b><br>
-• Cho phép trình duyệt sử dụng Camera.<br>
-• iPhone dùng Safari; Android dùng Chrome.<br>
-• Đảm bảo địa chỉ bắt đầu bằng <b>https://</b>.<br>
-• Máy tính phải có camera và đã cấp quyền cho trình duyệt.
+
+<div class="card">
+<div style="text-align:center;font-weight:bold">KẾT QUẢ</div>
+<div id="result">Chưa quét</div>
+<button id="copy" class="gray" disabled>📋 SAO CHÉP MÃ</button>
+<button id="form" class="red" disabled>📝 MỞ GOOGLE FORM</button>
+<button id="again" class="green">🔄 QUÉT LẠI</button>
+</div>
+
+<div class="card note">
+<b>Quét được cả:</b> QR Code và mã vạch sản phẩm EAN-13.<br>
+Nếu trình duyệt hỏi quyền Camera, chọn <b>Cho phép</b>.
 </div>
 </div>
+
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
-const FORM_URL="https://docs.google.com/forms/d/1jB3CHYlO5TvvV8XVucdNFwwhJv-4cRMXjKFqZCzuyY8/viewform";
-let scanner=null,running=false,currentCode="";
-const statusEl=document.getElementById("status"),resultEl=document.getElementById("result");
-const copyBtn=document.getElementById("copyBtn"),formBtn=document.getElementById("formBtn");
-function setResult(code){
- currentCode=String(code).replace(/\D/g,""); resultEl.textContent=currentCode||"Không hợp lệ";
- const ok=/^\d{8}$|^\d{12,13}$/.test(currentCode); copyBtn.disabled=!ok; formBtn.disabled=!ok;
- statusEl.textContent=ok?"✅ Đã nhận mã vạch: "+currentCode:"⚠️ Mã không đúng định dạng";
+const FORM="https://docs.google.com/forms/d/1jB3CHYlO5TvvV8XVucdNFwwhJv-4cRMXjKFqZCzuyY8/viewform";
+let qr=null,running=false,code="";
+const result=document.getElementById("result"),status=document.getElementById("status");
+const copy=document.getElementById("copy"),form=document.getElementById("form");
+
+function show(text){
+ code=String(text);
+ result.textContent=code;
+ copy.disabled=false; form.disabled=false;
+ status.textContent="✅ Đã nhận: "+code;
 }
-async function stopScanner(){
- if(scanner){try{if(running)await scanner.stop()}catch(e){} try{await scanner.clear()}catch(e){}}
+async function stop(){
+ if(qr){try{if(running)await qr.stop()}catch(e){}try{await qr.clear()}catch(e){}}
  running=false;
 }
-async function startWithConfig(config){
- scanner=new Html5Qrcode("reader");
+async function start(){
+ await stop();
+ qr=new Html5Qrcode("reader");
+ status.textContent="📷 Đang xin quyền Camera…";
  try{
-  await scanner.start(config,{fps:10,qrbox:{width:280,height:140},formatsToSupport:[
-   Html5QrcodeSupportedFormats.EAN_13,Html5QrcodeSupportedFormats.EAN_8,
-   Html5QrcodeSupportedFormats.UPC_A,Html5QrcodeSupportedFormats.UPC_E]},
-   async text=>{setResult(text);await stopScanner()},()=>{});
-  running=true;statusEl.textContent="Đưa mã vạch vào khung quét";return true;
- }catch(e){try{await scanner.clear()}catch(x){}scanner=null;return false}
+   await qr.start(
+    {facingMode:"environment"},
+    {fps:10,qrbox:{width:280,height:180}},
+    async t=>{show(t);await stop()},
+    ()=>{}
+   );
+   running=true;
+   status.textContent="Đưa QR hoặc mã vạch vào khung";
+ }catch(e){
+   status.textContent="❌ Không mở được Camera. Hãy cho phép Camera cho Safari/Chrome rồi tải lại trang.";
+ }
 }
-async function startScanner(){
- await stopScanner(); statusEl.textContent="📷 Đang xin quyền Camera…";
- if(!window.isSecureContext){statusEl.textContent="❌ Trang chưa chạy HTTPS.";return}
- if(await startWithConfig({facingMode:"environment"}))return;
- try{
-  const devices=await Html5Qrcode.getCameras();
-  if(devices&&devices.length){
-   const preferred=devices.find(d=>/back|rear|environment|sau/i.test(d.label))||devices[0];
-   if(await startWithConfig({deviceId:{exact:preferred.id}}))return;
-  }
- }catch(e){}
- statusEl.textContent="❌ Không mở được Camera. Vào cài đặt trình duyệt → Camera → Cho phép cho trang này, rồi tải lại.";
-}
-copyBtn.onclick=async()=>{
- if(!currentCode)return;
- try{await navigator.clipboard.writeText(currentCode);statusEl.textContent="✅ Đã copy mã. Mở Google Form và dán vào ô UPC."}
- catch(e){statusEl.textContent="Mã đã quét: "+currentCode+" — hãy nhấn giữ để sao chép."}
+copy.onclick=async()=>{
+ try{await navigator.clipboard.writeText(code);status.textContent="✅ Đã sao chép: "+code}
+ catch(e){status.textContent="Hãy nhấn giữ mã để sao chép."}
 };
-formBtn.onclick=async()=>{if(!currentCode)return;try{await navigator.clipboard.writeText(currentCode)}catch(e){}window.location.href=FORM_URL};
-document.getElementById("againBtn").onclick=()=>{currentCode="";resultEl.textContent="Chưa có mã";copyBtn.disabled=true;formBtn.disabled=true;startScanner()};
-window.addEventListener("load",startScanner);
+form.onclick=async()=>{
+ if(!code)return;
+ try{await navigator.clipboard.writeText(code)}catch(e){}
+ location.href=FORM;
+};
+document.getElementById("again").onclick=()=>{
+ result.textContent="Chưa quét";copy.disabled=true;form.disabled=true;start();
+};
+window.onload=start;
 </script>
 </body>
 </html>
