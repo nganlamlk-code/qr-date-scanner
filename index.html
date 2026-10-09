@@ -1,156 +1,21 @@
-<!doctype html>
-<html lang="vi">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>QUÉT QR & MÃ VẠCH DATE</title>
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-<style>
-*{box-sizing:border-box}
-body{margin:0;font-family:Arial,sans-serif;background:#f4f6f8;color:#111}
-.wrap{max-width:680px;margin:auto;padding:16px}
-h1{font-size:22px;text-align:center;margin:8px 0 4px}
-.sub{text-align:center;color:#666;font-size:14px;margin-bottom:12px}
-.card{background:#fff;border-radius:16px;padding:14px;box-shadow:0 2px 10px #0001;margin-bottom:12px}
-#reader{width:100%;overflow:hidden;border-radius:12px}
-.result{font-size:24px;font-weight:700;text-align:center;word-break:break-all;padding:12px}
-button{width:100%;padding:14px;margin-top:8px;border:0;border-radius:10px;font-size:16px;font-weight:700}
-.primary{background:#111;color:#fff}.photo{background:#1769aa;color:#fff}.secondary{background:#e9ecef}
-.status{text-align:center;font-size:14px;color:#666;margin:8px 0;line-height:1.4}
-.note{font-size:14px;line-height:1.5;color:#555}
-label{display:block;font-weight:700;margin:10px 0 4px}
-input[type=range]{width:100%}
-#zoomBox{display:none}
-#photoInput{display:none}
-.success{color:#087f23;font-weight:700}
-</style>
-</head>
-<body>
-<div class="wrap">
-<h1>QUÉT QR & MÃ VẠCH DATE</h1>
-<div class="sub">QR Code • EAN-13 • EAN-8 • UPC-A • UPC-E</div>
-
-<div class="card">
-  <div id="reader"></div>
-  <div id="status" class="status">Đang khởi động camera...</div>
-  <button class="photo" onclick="document.getElementById('photoInput').click()">
-    📷 CHỤP HÌNH / CHỌN ẢNH MÃ 13
-  </button>
-  <input id="photoInput" type="file" accept="image/*" capture="environment">
-</div>
-
-<div class="card">
-  <div class="note">
-    <b>Khi mã vạch quá nhỏ:</b> dùng nút <b>CHỤP HÌNH / CHỌN ẢNH MÃ 13</b>.
-    Chụp thật gần, lấy nét rõ, để toàn bộ mã vạch nằm trong ảnh và tránh lóa sáng.
-  </div>
-  <div id="zoomBox">
-    <label>Zoom camera: <span id="zoomValue">1×</span></label>
-    <input id="zoom" type="range" min="1" max="1" step="0.1" value="1">
-  </div>
-</div>
-
-<div class="card">
-  <div class="note">Kết quả:</div>
-  <div id="result" class="result">Chưa có mã</div>
-  <button class="primary" onclick="copyCode()">SAO CHÉP MÃ</button>
-  <button class="secondary" onclick="openForm()">MỞ GOOGLE FORM</button>
-  <button class="secondary" onclick="restart()">QUÉT LẠI</button>
-</div>
-</div>
-
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>QUÉT QR & MÃ VẠCH DATE</title>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script><script src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
+<style>*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f4f6f8;color:#111}.wrap{max-width:680px;margin:auto;padding:16px}h1{text-align:center;font-size:22px;margin:8px 0 4px}.sub{text-align:center;color:#666;margin-bottom:12px;font-size:14px}.card{background:white;border-radius:16px;padding:14px;box-shadow:0 2px 10px #0001;margin-bottom:12px}#reader{width:100%;overflow:hidden;border-radius:12px}.status{text-align:center;color:#555;font-size:14px;line-height:1.4;margin:8px 0}.result{text-align:center;font-size:24px;font-weight:700;word-break:break-all;padding:12px}button{width:100%;padding:14px;margin-top:8px;border:0;border-radius:10px;font-size:16px;font-weight:700}.primary{background:#111;color:white}.photo{background:#1769aa;color:white}.secondary{background:#e9ecef}.note{font-size:14px;line-height:1.5;color:#555}#photoInput{display:none}#preview{display:none;width:100%;margin-top:10px;border-radius:8px}.success{color:#087f23;font-weight:bold}</style></head><body><div class="wrap">
+<h1>QUÉT QR & MÃ VẠCH DATE</h1><div class="sub">QR Code • EAN-13 • EAN-8 • UPC-A • UPC-E</div>
+<div class="card"><div id="reader"></div><div id="status" class="status">Đang khởi động camera...</div><button class="photo" onclick="document.getElementById('photoInput').click()">📷 CHỤP HÌNH / CHỌN ẢNH MÃ 13</button><input id="photoInput" type="file" accept="image/*" capture="environment"><img id="preview" alt="Ảnh mã vạch đã chọn"></div>
+<div class="card"><div class="note"><b>Mẹo chụp:</b> lấy trọn vùng vạch đen và số bên dưới; chụp thẳng, đủ sáng, không lóa. Nếu chưa đọc được, thử cắt ảnh chỉ còn mã vạch rồi chọn lại.</div></div>
+<div class="card"><div class="note">Kết quả:</div><div id="result" class="result">Chưa có mã</div><button class="primary" onclick="copyCode()">SAO CHÉP MÃ</button><button class="secondary" onclick="openForm()">MỞ GOOGLE FORM</button><button class="secondary" onclick="restart()">QUÉT LẠI</button></div></div>
 <script>
-const FORM_URL = "https://docs.google.com/forms/d/1jB3CHYlO5TvvV8XVucdNFwwhJv-4cRMXjKFqZCzuyY8/edit";
-let scanner = null;
-let lastCode = "";
-
-function setStatus(t, ok=false){
-  const el=document.getElementById("status");
-  el.textContent=t;
-  el.className="status"+(ok?" success":"");
-}
-function showCode(decodedText, source){
-  const code=String(decodedText||"").replace(/\D/g,"");
-  if(!code) return;
-  lastCode=code;
-  document.getElementById("result").textContent=code;
-  setStatus("Đã nhận mã "+(source==="photo"?"từ hình ảnh":"từ camera")+": "+code,true);
-  try{scanner.pause(true);}catch(e){}
-}
-function onSuccess(decodedText, decodedResult){ showCode(decodedText,"camera"); }
-
-async function start(){
-  scanner=new Html5Qrcode("reader");
-  const config={
-    fps:15,
-    qrbox:(w,h)=>({width:Math.floor(w*0.92),height:Math.floor(Math.min(h*0.38,220))}),
-    aspectRatio:1.7777778,
-    formatsToSupport:[
-      Html5QrcodeSupportedFormats.QR_CODE,
-      Html5QrcodeSupportedFormats.EAN_13,
-      Html5QrcodeSupportedFormats.EAN_8,
-      Html5QrcodeSupportedFormats.UPC_A,
-      Html5QrcodeSupportedFormats.UPC_E
-    ]
-  };
-  try{
-    await scanner.start(
-      {facingMode:"environment",width:{ideal:1920},height:{ideal:1080}},
-      config,onSuccess,()=>{}
-    );
-    setStatus("Camera sẵn sàng – đưa mã vạch vào giữa khung");
-    setupZoom();
-  }catch(e){
-    setStatus("Không mở được camera. Bạn vẫn có thể dùng nút CHỤP HÌNH / CHỌN ẢNH MÃ 13.");
-  }
-}
-
-async function setupZoom(){
-  try{
-    const caps=scanner.getRunningTrackCameraCapabilities();
-    const z=caps&&caps.zoom;
-    if(z&&typeof z.min==="number"&&typeof z.max==="number"&&z.max>z.min){
-      document.getElementById("zoomBox").style.display="block";
-      const slider=document.getElementById("zoom");
-      slider.min=z.min; slider.max=z.max; slider.step=z.step||0.1; slider.value=z.min;
-      slider.oninput=async function(){
-        document.getElementById("zoomValue").textContent=
-          Number(this.value).toFixed(1).replace(".0","")+"×";
-        try{await scanner.applyVideoConstraints({advanced:[{zoom:Number(this.value)}]});}catch(e){}
-      };
-    }
-  }catch(e){}
-}
-
-/* PHƯƠNG ÁN CHỤP ẢNH / CHỌN ẢNH */
-document.getElementById("photoInput").addEventListener("change",async function(e){
-  const file=e.target.files&&e.target.files[0];
-  if(!file) return;
-  setStatus("Đang đọc mã vạch từ hình ảnh...");
-  try{
-    if(scanner){try{scanner.pause(true);}catch(err){}}
-    const result=await scanner.scanFile(file,true);
-    showCode(result,"photo");
-  }catch(err){
-    setStatus("Chưa đọc được mã từ ảnh. Hãy chụp gần hơn, đủ sáng và để toàn bộ mã vạch rõ nét.");
-    alert("Chưa đọc được mã 13 từ ảnh.\n\nHãy chụp lại thật gần mã vạch, giữ thẳng và tránh lóa sáng.");
-  }
-  this.value="";
-});
-
-async function restart(){
-  lastCode="";
-  document.getElementById("result").textContent="Chưa có mã";
-  try{scanner.resume();setStatus("Đưa mã vạch vào giữa khung");}
-  catch(e){location.reload();}
-}
-async function copyCode(){
-  if(!lastCode){alert("Chưa có mã để sao chép.");return;}
-  try{await navigator.clipboard.writeText(lastCode);alert("Đã sao chép mã: "+lastCode);}
-  catch(e){alert("Mã: "+lastCode);}
-}
-function openForm(){window.open(FORM_URL,"_blank");}
-start();
-</script>
-</body>
-</html>
+const FORM_URL="https://docs.google.com/forms/d/1jB3CHYlO5TvvV8XVucdNFwwhJv-4cRMXjKFqZCzuyY8/edit";
+let scanner=null,lastCode="";
+const formats=[ZXing.BarcodeFormat.EAN_13,ZXing.BarcodeFormat.EAN_8,ZXing.BarcodeFormat.UPC_A,ZXing.BarcodeFormat.UPC_E,ZXing.BarcodeFormat.QR_CODE];
+function status(t,ok=false){const e=document.getElementById("status");e.textContent=t;e.className="status"+(ok?" success":"")}
+function showCode(code,source){lastCode=String(code||"").trim();document.getElementById("result").textContent=lastCode;status("Đã đọc mã từ "+source+": "+lastCode,true);try{scanner&&scanner.pause(true)}catch(e){}}
+async function start(){try{scanner=new Html5Qrcode("reader",{formatsToSupport:[Html5QrcodeSupportedFormats.QR_CODE,Html5QrcodeSupportedFormats.EAN_13,Html5QrcodeSupportedFormats.EAN_8,Html5QrcodeSupportedFormats.UPC_A,Html5QrcodeSupportedFormats.UPC_E]});await scanner.start({facingMode:"environment"},{fps:12,qrbox:(w,h)=>({width:Math.floor(w*.94),height:Math.min(230,Math.floor(h*.42))})},txt=>showCode(txt,"camera"),()=>{});status("Camera sẵn sàng. Nếu mã nhỏ, dùng nút chụp hình.")}catch(e){status("Camera chưa mở được. Bạn vẫn có thể chụp hình hoặc chọn ảnh mã vạch.")}}
+function cropCandidates(img){const w=img.naturalWidth||img.width,h=img.naturalHeight||img.height,canvas=document.createElement("canvas"),ctx=canvas.getContext("2d");const regions=[[0,0,w,h],[0,h*.2,w,h*.6],[w*.04,h*.25,w*.92,h*.5],[0,h*.35,w,h*.4]];return regions.map(([x,y,cw,ch])=>{const scale=Math.min(2.5,1600/Math.max(cw,ch));canvas.width=Math.round(cw*scale);canvas.height=Math.round(ch*scale);ctx.filter="contrast(1.35) grayscale(1)";ctx.drawImage(img,x,y,cw,ch,0,0,canvas.width,canvas.height);ctx.filter="none";return canvas.toDataURL("image/png")})}
+async function decodeImage(dataUrl){const hints=new Map();hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS,formats);hints.set(ZXing.DecodeHintType.TRY_HARDER,true);hints.set(ZXing.DecodeHintType.ALSO_INVERTED,true);const reader=new ZXing.MultiFormatReader();reader.setHints(hints);const img=new Image();await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src=dataUrl});for(const candidate of cropCandidates(img)){const ci=new Image();await new Promise((res,rej)=>{ci.onload=res;ci.onerror=rej;ci.src=candidate});try{const c=document.createElement("canvas");c.width=ci.naturalWidth;c.height=ci.naturalHeight;const ctx=c.getContext("2d",{willReadFrequently:true});ctx.drawImage(ci,0,0);const imageData=ctx.getImageData(0,0,c.width,c.height);const luminance=new ZXing.RGBLuminanceSource(imageData.data,c.width,c.height);const bitmap=new ZXing.BinaryBitmap(new ZXing.HybridBinarizer(luminance));return reader.decode(bitmap).getText()}catch(e){try{reader.reset()}catch(ignore){}}}throw Error("No barcode found")}
+document.getElementById("photoInput").addEventListener("change",async function(){const file=this.files&&this.files[0];if(!file)return;const preview=document.getElementById("preview");preview.src=URL.createObjectURL(file);preview.style.display="block";status("Đang phân tích ảnh và thử nhiều vùng cắt...");try{const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)});const code=await decodeImage(dataUrl);showCode(code,"ảnh")}catch(e){status("Chưa đọc được mã từ ảnh. Hãy cắt ảnh sát vùng mã vạch, gồm cả vạch đen và số bên dưới.");alert("Chưa giải mã được mã vạch. Hãy thử cắt ảnh chỉ còn vùng mã vạch, lấy đủ hai mép mã và số bên dưới, rồi chọn lại.")}this.value=""});
+async function restart(){lastCode="";document.getElementById("result").textContent="Chưa có mã";document.getElementById("preview").style.display="none";try{scanner.resume();status("Đưa mã vạch vào giữa khung")}catch(e){location.reload()}}
+async function copyCode(){if(!lastCode){alert("Chưa có mã để sao chép.");return}try{await navigator.clipboard.writeText(lastCode);alert("Đã sao chép mã: "+lastCode)}catch(e){alert("Mã: "+lastCode)}}
+function openForm(){window.open(FORM_URL,"_blank")}start();
+</script></body></html>
