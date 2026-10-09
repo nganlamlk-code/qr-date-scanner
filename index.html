@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>QR DATE – Tự xử lý ảnh mã vạch</title>
+<title>QR DATE – Đọc mã vạch từ ảnh</title>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
 <style>
@@ -20,108 +20,121 @@ button{width:100%;padding:14px;margin-top:8px;border:0;border-radius:10px;font-s
 #bar{height:100%;width:0;background:#1769aa}
 </style></head>
 <body><div class="wrap">
-<h1>QUÉT QR & MÃ VẠCH DATE</h1>
-<div class="sub">QR Code • EAN-13 • EAN-8 • UPC-A • UPC-E</div>
+<h1>QUÉT QR & MÃ VẠCH DATE</h1><div class="sub">QR Code • EAN-13 • EAN-8 • UPC-A • UPC-E</div>
 <div class="card">
-<div id="reader"></div><div id="status" class="status">Đang khởi động camera...</div>
-<button class="photo" onclick="document.getElementById('photoInput').click()">📷 CHỤP HÌNH / CHỌN ẢNH MÃ 13</button>
-<input id="photoInput" type="file" accept="image/*" capture="environment">
-<div id="progress"><div id="bar"></div></div>
-<img id="preview" alt="Ảnh mã vạch đã chọn">
+  <div id="reader"></div><div id="status" class="status">Đang khởi động camera...</div>
+  <button class="photo" onclick="document.getElementById('photoInput').click()">📷 CHỤP HÌNH / CHỌN ẢNH MÃ 13</button>
+  <input id="photoInput" type="file" accept="image/*" capture="environment">
+  <div id="progress"><div id="bar"></div></div><img id="preview" alt="Ảnh đã chọn">
 </div>
-<div class="card"><div class="note"><b>Đã cải tiến:</b> chương trình tự thử cắt nhiều vùng quanh mã vạch, phóng to ảnh và tăng tương phản trước khi giải mã. Nhân viên không cần tự cắt ảnh trước.</div></div>
+<div class="card"><div class="note"><b>Bản V8:</b> tự thử nhiều vùng cắt quanh ảnh và dùng bộ giải mã trình duyệt của ZXing cho từng vùng. Không cần tự cắt ảnh trước.</div></div>
 <div class="card"><div class="note">Kết quả:</div><div id="result" class="result">Chưa có mã</div>
-<button class="primary" onclick="copyCode()">SAO CHÉP MÃ</button>
-<button class="secondary" onclick="openForm()">MỞ GOOGLE FORM</button>
-<button class="secondary" onclick="restart()">QUÉT LẠI</button></div>
+<button class="primary" onclick="copyCode()">SAO CHÉP MÃ</button><button class="secondary" onclick="openForm()">MỞ GOOGLE FORM</button><button class="secondary" onclick="restart()">QUÉT LẠI</button></div>
 </div>
 <script>
 const FORM_URL="https://docs.google.com/forms/d/1jB3CHYlO5TvvV8XVucdNFwwhJv-4cRMXjKFqZCzuyY8/edit";
 let scanner=null,lastCode="";
-const formats=[ZXing.BarcodeFormat.EAN_13,ZXing.BarcodeFormat.EAN_8,ZXing.BarcodeFormat.UPC_A,ZXing.BarcodeFormat.UPC_E,ZXing.BarcodeFormat.QR_CODE];
-function setStatus(t,ok=false){const e=document.getElementById("status");e.textContent=t;e.className="status"+(ok?" success":"")}
-function showCode(code,source){lastCode=String(code||"").trim();document.getElementById("result").textContent=lastCode;setStatus("Đã đọc mã từ "+source+": "+lastCode,true);try{scanner&&scanner.pause(true)}catch(e){}}
-async function start(){
+const barcodeFormats=[
+  ZXing.BarcodeFormat.EAN_13,ZXing.BarcodeFormat.EAN_8,
+  ZXing.BarcodeFormat.UPC_A,ZXing.BarcodeFormat.UPC_E,
+  ZXing.BarcodeFormat.QR_CODE
+];
+function setStatus(t,ok=false){const el=document.getElementById("status");el.textContent=t;el.className="status"+(ok?" success":"")}
+function showCode(code,source){
+  lastCode=String(code||"").trim();
+  document.getElementById("result").textContent=lastCode;
+  setStatus("Đã đọc mã từ "+source+": "+lastCode,true);
+  try{scanner&&scanner.pause(true)}catch(e){}
+}
+async function startCamera(){
  try{
-  scanner=new Html5Qrcode("reader",{formatsToSupport:[Html5QrcodeSupportedFormats.QR_CODE,Html5QrcodeSupportedFormats.EAN_13,Html5QrcodeSupportedFormats.EAN_8,Html5QrcodeSupportedFormats.UPC_A,Html5QrcodeSupportedFormats.UPC_E]});
-  await scanner.start({facingMode:"environment"},{fps:12,qrbox:(w,h)=>({width:Math.floor(w*.94),height:Math.min(240,Math.floor(h*.45))})},txt=>showCode(txt,"camera"),()=>{});
-  setStatus("Camera sẵn sàng. Mã nhỏ hoặc khó quét thì dùng nút chụp hình.");
+  scanner=new Html5Qrcode("reader",{formatsToSupport:[
+    Html5QrcodeSupportedFormats.QR_CODE,Html5QrcodeSupportedFormats.EAN_13,
+    Html5QrcodeSupportedFormats.EAN_8,Html5QrcodeSupportedFormats.UPC_A,
+    Html5QrcodeSupportedFormats.UPC_E]});
+  await scanner.start({facingMode:"environment"},{fps:12,qrbox:(w,h)=>({width:Math.floor(w*.94),height:Math.min(240,Math.floor(h*.45))})},
+    txt=>showCode(txt,"camera"),()=>{});
+  setStatus("Camera sẵn sàng. Nếu mã nhỏ, hãy dùng chụp hình.");
  }catch(e){setStatus("Camera chưa mở được. Bạn vẫn có thể chụp hình hoặc chọn ảnh mã vạch.")}
 }
-function makeCrops(img){
- const w=img.naturalWidth||img.width,h=img.naturalHeight||img.height;
- // Full image plus likely barcode zones around the lower half of a product photo.
- const specs=[
-  [0,0,1,1],
-  [0,.35,1,.55],
-  [0,.48,1,.38],
-  [.05,.48,.90,.38],
-  [0,.58,1,.28],
-  [.08,.56,.84,.30],
-  [.12,.60,.76,.24],
-  [0,.25,1,.65]
- ];
- return specs.map(([rx,ry,rw,rh])=>({x:Math.round(rx*w),y:Math.round(ry*h),w:Math.round(rw*w),h:Math.round(rh*h)}))
-  .filter(r=>r.w>40&&r.h>20&&r.x+r.w<=w&&r.y+r.h<=h);
+function getRegions(w,h){
+ // Start with full image, then progressively focus on lower areas where product barcodes commonly appear.
+ return [
+  [0,0,w,h],
+  [0,Math.round(h*.35),w,Math.round(h*.60)],
+  [0,Math.round(h*.48),w,Math.round(h*.42)],
+  [Math.round(w*.08),Math.round(h*.48),Math.round(w*.84),Math.round(h*.40)],
+  [0,Math.round(h*.58),w,Math.round(h*.30)],
+  [Math.round(w*.10),Math.round(h*.57),Math.round(w*.80),Math.round(h*.30)],
+  [Math.round(w*.15),Math.round(h*.60),Math.round(w*.70),Math.round(h*.25)],
+  [0,Math.round(h*.20),w,Math.round(h*.75)]
+ ].filter(([x,y,cw,ch])=>cw>0&&ch>0&&x+cw<=w&&y+ch<=h);
 }
-function canvasVariant(img,rect,mode){
- const scale=Math.min(4,Math.max(2,1800/Math.max(rect.w,rect.h)));
- const c=document.createElement("canvas");c.width=Math.round(rect.w*scale);c.height=Math.round(rect.h*scale);
- const ctx=c.getContext("2d",{willReadFrequently:true});
+function makeCandidate(img,region,mode){
+ const [x,y,rw,rh]=region;
+ const scale=Math.min(4,Math.max(1.5,1800/Math.max(rw,rh)));
+ const canvas=document.createElement("canvas");
+ canvas.width=Math.round(rw*scale);canvas.height=Math.round(rh*scale);
+ const ctx=canvas.getContext("2d",{willReadFrequently:true});
  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";
- ctx.drawImage(img,rect.x,rect.y,rect.w,rect.h,0,0,c.width,c.height);
- const id=ctx.getImageData(0,0,c.width,c.height),d=id.data;
+ ctx.drawImage(img,x,y,rw,rh,0,0,canvas.width,canvas.height);
  if(mode!=="color"){
-  for(let i=0;i<d.length;i+=4){
-   let y=.299*d[i]+.587*d[i+1]+.114*d[i+2];
-   if(mode==="contrast") y=Math.max(0,Math.min(255,(y-128)*1.65+128));
-   if(mode==="threshold") y=y>150?255:0;
-   if(mode==="threshold2") y=y>185?255:0;
-   d[i]=d[i+1]=d[i+2]=y;
-  }
-  ctx.putImageData(id,0,0);
+   const imageData=ctx.getImageData(0,0,canvas.width,canvas.height),d=imageData.data;
+   for(let i=0;i<d.length;i+=4){
+     let v=.299*d[i]+.587*d[i+1]+.114*d[i+2];
+     if(mode==="contrast")v=Math.max(0,Math.min(255,(v-128)*1.7+128));
+     else if(mode==="threshold")v=v>150?255:0;
+     else if(mode==="threshold2")v=v>185?255:0;
+     d[i]=d[i+1]=d[i+2]=v;
+   }
+   ctx.putImageData(imageData,0,0);
  }
- return ctx;
+ return canvas.toDataURL("image/png");
 }
-function decodeCanvas(ctx, invert=false, global=false){
- const c=ctx.canvas, id=ctx.getImageData(0,0,c.width,c.height);
- let source=new ZXing.RGBLuminanceSource(id.data,c.width,c.height);
- if(invert) source=new ZXing.InvertedLuminanceSource(source);
- const bin=global?new ZXing.GlobalHistogramBinarizer(source):new ZXing.HybridBinarizer(source);
- const bitmap=new ZXing.BinaryBitmap(bin);
- const reader=new ZXing.MultiFormatReader(),hints=new Map();
- hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS,formats);
+async function decodeOneImage(url){
+ const hints=new Map();
+ hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS,barcodeFormats);
  hints.set(ZXing.DecodeHintType.TRY_HARDER,true);
- reader.setHints(hints);
- return reader.decode(bitmap).getText();
+ hints.set(ZXing.DecodeHintType.ALSO_INVERTED,true);
+ // BrowserMultiFormatReader creates the proper browser luminance source from image/canvas data.
+ const reader=new ZXing.BrowserMultiFormatReader(hints,250);
+ const result=await reader.decodeFromImageUrl(url);
+ try{reader.reset()}catch(e){}
+ return result.getText();
 }
 async function decodePhoto(file){
- const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)});
- const img=new Image();await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src=dataUrl});
- const crops=makeCrops(img),modes=["color","contrast","threshold","threshold2"];
- let attempts=0;const total=crops.length*modes.length*2;
- const progress=document.getElementById("progress"),bar=document.getElementById("bar");
- progress.style.display="block";bar.style.width="0%";
- for(const rect of crops){
+ const dataUrl=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file)});
+ const img=new Image();await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject;img.src=dataUrl});
+ const regions=getRegions(img.naturalWidth,img.naturalHeight),modes=["color","contrast","threshold","threshold2"];
+ const total=regions.length*modes.length;
+ let count=0;
+ document.getElementById("progress").style.display="block";
+ const bar=document.getElementById("bar");
+ for(const region of regions){
   for(const mode of modes){
-   const ctx=canvasVariant(img,rect,mode);
-   for(const global of [false,true]){
-    for(const invert of [false,true]){
-     try{const code=decodeCanvas(ctx,invert,global);progress.style.display="none";return code}catch(e){}
-     attempts++;bar.style.width=Math.round(attempts/total*100)+"%";
-    }
-   }
+   const candidate=makeCandidate(img,region,mode);
+   try{
+    const code=await decodeOneImage(candidate);
+    document.getElementById("progress").style.display="none";
+    return code;
+   }catch(e){}
+   count++;bar.style.width=Math.round(count/total*100)+"%";
+   setStatus("Đang tự cắt, phóng to và đọc mã... "+Math.round(count/total*100)+"%");
+   await new Promise(resolve=>setTimeout(resolve,0));
   }
-  setStatus("Đang tự cắt và phóng to ảnh mã vạch... "+Math.round(attempts/total*100)+"%");
-  await new Promise(r=>setTimeout(r,0));
  }
- progress.style.display="none";throw Error("Không đọc được ảnh sau nhiều lần xử lý");
+ document.getElementById("progress").style.display="none";
+ throw new Error("Không đọc được mã sau khi thử các vùng ảnh");
 }
 document.getElementById("photoInput").addEventListener("change",async function(){
  const file=this.files&&this.files[0];if(!file)return;
  const preview=document.getElementById("preview");preview.src=URL.createObjectURL(file);preview.style.display="block";
- setStatus("Đang tự cắt, phóng to và thử đọc ảnh...");
- try{showCode(await decodePhoto(file),"ảnh đã xử lý")}catch(e){setStatus("Chưa đọc được mã. Hãy thử chụp thẳng mặt mã vạch, giữ đủ hai mép vạch và tránh cong bề mặt.");alert("Chương trình đã thử nhiều vùng cắt và tăng tương phản nhưng vẫn chưa nhận ra mã. Hãy chụp gần hơn, thẳng mặt mã vạch và giữ đủ hai mép vạch.");}
+ setStatus("Đang tự xử lý ảnh. Vui lòng chờ...");
+ try{showCode(await decodePhoto(file),"ảnh đã xử lý")}
+ catch(e){
+  setStatus("Chưa nhận diện được mã. Hãy thử chụp gần, thẳng mặt mã vạch và lấy đủ hai mép.");
+  alert("Chương trình đã thử nhiều vùng cắt và cách xử lý ảnh nhưng vẫn chưa đọc được. Bạn có thể gửi ảnh này để tiếp tục kiểm tra.");
+ }
  this.value="";
 });
 async function restart(){lastCode="";document.getElementById("result").textContent="Chưa có mã";document.getElementById("preview").style.display="none";try{scanner.resume();setStatus("Đưa mã vạch vào giữa khung")}catch(e){location.reload()}}
