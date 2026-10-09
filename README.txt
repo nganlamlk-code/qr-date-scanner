@@ -1,7 +1,8 @@
-QR DATE SCANNER V8 – SỬA CÁCH ĐỌC ẢNH
-Điểm thay đổi quan trọng: dùng ZXing BrowserMultiFormatReader.decodeFromImageUrl cho từng ảnh cắt/đã xử lý, để thư viện tự tạo nguồn ảnh/luminance đúng cách; không tự truyền RGBA pixel vào RGBLuminanceSource.
-Tự thử 8 vùng ảnh và 4 biến thể màu/độ tương phản.
-Hỗ trợ EAN-13, EAN-8, UPC-A, UPC-E, QR.
-Cài đặt: thay toàn bộ index.html trên GitHub repo bằng index.html trong ZIP rồi Commit changes.
+QR DATE SCANNER V9 – XỬ LÝ ẢNH NHANH
+Bản V9 bỏ vòng lặp nhiều biến thể gây chờ lâu ở V7/V8.
+- Chỉ thử 4 vùng ảnh trọng điểm, mỗi vùng 2 biến thể
+- Dùng ZXing BrowserMultiFormatReader.decodeFromImageElement
+- Báo lỗi sau số lần thử hữu hạn, không bắt nhân viên chờ 5 phút
+Cài đặt: giải nén ZIP, thay toàn bộ index.html trên GitHub bằng index.html này rồi Commit changes.
 URL: https://nganlamlk-code.github.io/qr-date-scanner/
-Cần internet để tải thư viện từ CDN. Không thể đảm bảo đọc mọi ảnh; mã bị cong, lóa, thiếu mép hoặc độ phân giải thấp có thể vẫn thất bại.
+Cần internet để tải thư viện CDN. Không đảm bảo giải mã được ảnh nếu barcode quá nhỏ, cong, lóa hoặc mờ.
