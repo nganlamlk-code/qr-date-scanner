@@ -1,0 +1,13 @@
+HUONG DAN TIEP TUC QR DATE
+
+1. URL Web app da duoc gan san vao index.html.
+2. Dang nhap GitHub, mo repository nganlamlk-code/qr-date-scanner.
+3. Mo file index.html trong repository, chon Edit (bieu tuong but chi).
+4. Thay toan bo noi dung file index.html bang noi dung cua index.html trong bo nay.
+5. Nhap commit message, bam Commit changes.
+6. Cho GitHub Pages cap nhat, sau do mo https://nganlamlk-code.github.io/qr-date-scanner/
+7. Nhap ban ghi thu, bam Gui du lieu. Kiem tra ca Form_Responses va DU LIEU DATE trong Google Sheets.
+
+Luu y: Trang co the hien 'Da gui yeu cau' do trinh duyet dung no-cors, nhung chi xem la thanh cong khi ban ghi that su xuat hien trong Google Sheets. Neu khong co du lieu, kiem tra Apps Script > Executions (Lan thuc thi) de xem loi.
+
+Neu GitHub Pages khong cap nhat, thu Ctrl+F5 hoac mo cua so an danh. Khong xoa DMScan neu danh muc UPC van con.
